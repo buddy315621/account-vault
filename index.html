@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover">
+<title>账号管家 · 游戏与应用密码管理</title>
+<meta name="theme-color" content="#0ea5e9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="账号管家">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230ea5e9' stroke-width='2'%3E%3Cpath d='M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --text:#1b2130; --muted:#6b7280;
+  --border:#e4e8ef; --border-2:#eef1f6; --accent:#4f46e5; --accent-soft:#eef2ff;
+  --accent-2:#0ea5e9; --danger:#dc2626; --danger-soft:#fee2e2; --ok:#16a34a; --warn:#d97706;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+}
+html[data-theme="dark"]{
+  --bg:#0e1116; --panel:#161b23; --panel-2:#1b212b; --text:#e7eaf0; --muted:#96a0b0;
+  --border:#262d38; --border-2:#20262f; --accent:#7c8cff; --accent-soft:#202743;
+  --danger:#f87171; --danger-soft:#3b1d1d; --ok:#4ade80; --warn:#fbbf24;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:14px; -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit}
+.hidden{display:none !important}
+.icon{flex:none;vertical-align:-3px}
+
+/* ---------- 锁屏 ---------- */
+.lock-screen{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(1200px 600px at 50% -10%, var(--accent-soft), var(--bg));
+  padding:20px; z-index:100;
+}
+.lock-card{
+  width:100%; max-width:400px; background:var(--panel); border:1px solid var(--border);
+  border-radius:18px; box-shadow:var(--shadow); padding:32px 28px; text-align:center;
+}
+.lock-logo{
+  width:56px;height:56px;margin:0 auto 14px;border-radius:16px;background:var(--accent-soft);
+  color:var(--accent); display:flex;align-items:center;justify-content:center;
+}
+.lock-card h1{margin:0 0 6px;font-size:20px;letter-spacing:.5px}
+.lock-sub{color:var(--muted);margin:0 0 22px;font-size:13px}
+.lock-form{display:flex;flex-direction:column;gap:10px;text-align:left}
+.lock-foot{margin-top:16px;font-size:12px;color:var(--muted);line-height:1.7}
+.lock-foot button{
+  background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:0 2px;text-decoration:underline
+}
+.lock-tip{
+  background:var(--panel-2);border:1px solid var(--border-2);border-radius:10px;
+  padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.7;text-align:left
+}
+
+/* ---------- 布局 ---------- */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{
+  width:236px;flex:none;background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:16px 12px;gap:4px;
+}
+.brand{display:flex;align-items:center;gap:9px;padding:6px 8px 16px;font-weight:600;font-size:15px}
+.brand .mark{
+  width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center
+}
+.nav-title{font-size:11px;color:var(--muted);padding:12px 10px 6px;letter-spacing:1px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;cursor:pointer;
+  color:var(--text);font-size:13.5px;user-select:none
+}
+.nav-item:hover{background:var(--panel-2)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav-item .count{margin-left:auto;font-size:11px;color:var(--muted);background:var(--panel-2);padding:1px 7px;border-radius:20px}
+.nav-item.active .count{background:#fff;color:var(--accent)}
+html[data-theme="dark"] .nav-item.active .count{background:#0e1116}
+.sidebar-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{
+  display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);
+  background:var(--panel);
+}
+.search-wrap{position:relative;flex:1;max-width:420px}
+.search-wrap .icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search-wrap input{
+  width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:10px;
+  background:var(--panel-2);color:var(--text);font-size:13.5px;outline:none
+}
+.search-wrap input:focus{border-color:var(--accent);background:var(--panel)}
+.spacer{flex:1}
+.content{flex:1;overflow:auto;padding:18px 20px 40px}
+
+/* ---------- 控件 ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;
+  border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;font-size:13.5px;
+  transition:.15s
+}
+.btn:hover{background:var(--panel-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger);border-color:var(--danger-soft);background:var(--danger-soft)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--panel-2);color:var(--text)}
+.btn.icon-only{padding:8px;width:34px;justify-content:center}
+.btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
+input,select,textarea{
+  font-family:inherit;font-size:13.5px;color:var(--text);background:var(--panel);
+  border:1px solid var(--border);border-radius:9px;padding:8px 10px;outline:none;width:100%
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:60px}
+label.fld{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted)}
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.seg button{
+  border:none;background:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:var(--muted);
+  display:inline-flex;align-items:center;gap:6px;font-size:13px
+}
+.seg button.active{background:var(--panel);color:var(--accent);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+/* ---------- 统计 ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.stat{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 15px;cursor:pointer;transition:.15s
+}
+.stat:hover{border-color:var(--accent);transform:translateY(-1px)}
+.stat .k{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.stat .v{font-size:22px;font-weight:700;margin-top:6px;letter-spacing:.5px}
+.stat.warn .v{color:var(--warn)}
+.stat.danger .v{color:var(--danger)}
+
+/* ---------- 卡片 ---------- */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:13px}
+.card{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:15px;
+  box-shadow:var(--shadow);position:relative;transition:.15s
+}
+.card:hover{border-color:var(--accent)}
+.card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:11px}
+.avatar{
+  width:36px;height:36px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:15px
+}
+.card-title{font-weight:650;font-size:14.5px;line-height:1.35;word-break:break-all}
+.badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:20px;
+  background:var(--panel-2);color:var(--muted);border:1px solid var(--border);margin-top:4px
+}
+.fav-btn{
+  margin-left:auto;border:none;background:none;cursor:pointer;color:var(--muted);padding:2px;line-height:0
+}
+.fav-btn.on{color:var(--warn)}
+.rows{display:flex;flex-direction:column;gap:7px}
+.row{display:flex;align-items:center;gap:8px;font-size:13px}
+.row .lb{color:var(--muted);font-size:12px;width:44px;flex:none}
+.row .val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .val.mask{letter-spacing:2px}
+.row .act{border:none;background:none;cursor:pointer;color:var(--muted);padding:3px;line-height:0;border-radius:6px}
+.row .act:hover{color:var(--accent);background:var(--panel-2)}
+.card-foot{display:flex;gap:6px;margin-top:12px;padding-top:11px;border-top:1px solid var(--border-2)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.tag{font-size:11px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:20px}
+.remark{margin-top:9px;font-size:12px;color:var(--muted);line-height:1.6;word-break:break-word}
+
+/* ---------- 表格 ---------- */
+.tbl-wrap{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border-2);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2);position:sticky;top:0}
+tbody tr:hover{background:var(--panel-2)}
+td .ops-in{display:flex;gap:4px}
+
+/* ---------- 空状态 ---------- */
+.empty{
+  text-align:center;padding:70px 20px;color:var(--muted)
+}
+.empty .big{font-size:40px;margin-bottom:10px;opacity:.35}
+.empty h3{margin:0 0 6px;color:var(--text);font-size:15px}
+.empty p{margin:0 0 16px;font-size:13px}
+
+/* ---------- 弹窗 ---------- */
+.mask{position:fixed;inset:0;background:rgba(15,20,30,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;overflow:auto}
+.modal{
+  background:var(--panel);border-radius:16px;width:100%;max-width:560px;box-shadow:var(--shadow);
+  border:1px solid var(--border);animation:pop .16s ease-out
+}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border)}
+.modal-head h2{margin:0;font-size:15.5px}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:13px}
+.modal-foot{display:flex;gap:9px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--border)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pwd-line{display:flex;gap:7px}
+.pwd-line input{flex:1}
+.strength{height:5px;border-radius:5px;background:var(--border);overflow:hidden;margin-top:6px}
+.strength i{display:block;height:100%;border-radius:5px;transition:.2s}
+.slabel{font-size:11.5px;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between}
+.help-list{font-size:13px;line-height:1.85;color:var(--muted)}
+.help-list b{color:var(--text)}
+.help-list li{margin-bottom:3px}
+
+/* ---------- 提示 ---------- */
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{
+  background:#1f2937;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;
+  box-shadow:0 8px 20px rgba(0,0,0,.2);animation:up .2s ease-out
+}
+html[data-theme="dark"] .toast{background:#374151}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.err{color:var(--danger);font-size:12.5px;min-height:16px}
+
+@media(max-width:860px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);flex-direction:row;overflow-x:auto;padding:10px;gap:6px}
+  .sidebar .nav-title{display:none}
+  .sidebar-foot{margin:0;padding:0 0 0 10px;border:none;flex-direction:row;align-items:center;gap:4px}
+  .brand{padding:0 8px 0 4px}
+  .nav-item{white-space:nowrap}
+  .topbar{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- 锁屏 -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo" id="lockLogo"></div>
+    <h1 id="lockTitle">账号管家</h1>
+    <p class="lock-sub" id="lockSub">请输入主密码以解锁</p>
+    <form class="lock-form" id="lockForm" autocomplete="off">
+      <input type="password" id="pwd1" placeholder="主密码" autocomplete="new-password">
+      <input type="password" id="pwd2" placeholder="再次确认主密码" autocomplete="new-password" style="display:none">
+      <div class="err" id="lockErr"></div>
+      <button class="btn primary" id="lockBtn" type="submit" style="justify-content:center;padding:10px">解锁</button>
+    </form>
+    <div class="lock-foot" id="lockFoot"></div>
+  </div>
+</div>
+
+<!-- 主应用 -->
+<div class="app hidden" id="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark" id="brandMark"></span><span>账号管家</span></div>
+    <div class="nav-title">分类</div>
+    <div id="navTypes"></div>
+    <div class="nav-title">标签</div>
+    <div id="navTags"></div>
+    <div class="sidebar-foot">
+      <div class="nav-item" data-act="export"><span class="ic"></span>备份 / 导出</div>
+      <div class="nav-item" data-act="settings"><span class="ic"></span>设置</div>
+      <div class="nav-item" data-act="help"><span class="ic"></span>使用说明</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <span id="searchIcon"></span>
+        <input id="search" placeholder="搜索名称 / 账号 / 大区 / 角色名 / 备注…" autocomplete="off">
+      </div>
+      <div class="spacer"></div>
+      <div class="seg" id="viewSeg">
+        <button data-view="grid" class="active"></button>
+        <button data-view="table"></button>
+      </div>
+      <select id="sortSel" style="width:auto">
+        <option value="updated">最近修改</option>
+        <option value="created">创建时间</option>
+        <option value="name">名称 A-Z</option>
+        <option value="type">按类型</option>
+      </select>
+      <button class="btn ghost icon-only" id="themeBtn" title="切换主题"></button>
+      <button class="btn ghost icon-only" id="lockBtn2" title="立即锁定"></button>
+      <button class="btn primary" id="addBtn"></button>
+    </div>
+
+    <div class="content">
+      <div class="stats" id="stats"></div>
+      <div class="toolbar">
+        <div class="nav-title" style="padding:0" id="listTitle"></div>
+        <div class="spacer"></div>
+        <span id="listCount" style="color:var(--muted);font-size:12.5px"></span>
+      </div>
+      <div id="list"></div>
+    </div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   账号管家 AccountVault —— 本地加密账号管理器
+   数据全程保存在本机，使用 PBKDF2 + AES-GCM 加密
+   ========================================================= */
+(function(){
+'use strict';
+
+var LS_KEY = 'accountvault_v1';
+var MAGIC  = 'ACCTVAULT1';
+var KDF_ITER = 200000;
+
+/* ---------- 图标 ---------- */
+var P = {
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  search:'<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  eye:'<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff:'<path d="M3 3l18 18"/><path d="M10.6 6.2A10 10 0 0 1 12 6c6.4 0 10 6 10 6a17.5 17.5 0 0 1-2.7 3.2"/><path d="M6.3 8.3A16.8 16.8 0 0 0 2 12s3.6 6 10 6a10 10 0 0 0 3.6-.7"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  grid:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>',
+  list:'<line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+  game:'<rect x="2" y="7" width="20" height="12" rx="4"/><path d="M7 11v4M5 13h4"/><circle cx="16" cy="11.5" r="1.1"/><circle cx="18.5" cy="14" r="1.1"/>',
+  app:'<rect x="6" y="2" width="12" height="20" rx="3"/><line x1="10.5" y1="18.5" x2="13.5" y2="18.5"/>',
+  web:'<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>',
+  other:'<path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7.5L12 12l8.7-4.5"/><line x1="12" y1="12" x2="12" y2="21"/>',
+  star:'<path d="M12 3l2.7 5.6 6.3.9-4.5 4.4 1.1 6.1L12 17l-5.6 3 1.1-6.1L3 9.5l6.3-.9z"/>',
+  starfill:'<path d="M12 3l2.7 5.6 6.3.9-4.5 4.4 1.1 6.1L12 17l-5.6 3 1.1-6.1L3 9.5l6.3-.9z" fill="currentColor"/>',
+  dice:'<path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  settings:'<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2.2"/><circle cx="15" cy="12" r="2.2"/><circle cx="9" cy="18" r="2.2"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/><circle cx="12" cy="17.5" r=".8" fill="currentColor"/>',
+  x:'<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+  check:'<path d="M4 12l5 5L20 6"/>',
+  warn:'<path d="M12 3l9 16H3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r=".8" fill="currentColor"/>',
+  key:'<circle cx="8" cy="14" r="4"/><path d="M10.8 16.8L20 7.6"/><path d="M17 5l3 3"/><path d="M15 7l2 2"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>',
+  folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'
+};
+function ic(n,s,w){ s=s||17; w=w||1.8;
+  return '<svg class="icon" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round">'+(P[n]||'')+'</svg>';
+}
+
+/* ---------- 小工具 ---------- */
+function $(s,r){ return (r||document).querySelector(s); }
+function $$(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+function uid(){ if(window.crypto && crypto.randomUUID){ return crypto.randomUUID(); } return Date.now()+'-'+Math.random().toString(36).slice(2); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function toast(msg){
+  var box=document.createElement('div'); box.className='toast'; box.textContent=msg;
+  $('#toast').appendChild(box);
+  setTimeout(function(){ box.style.transition='.25s'; box.style.opacity='0'; setTimeout(function(){ box.remove(); },260); },1900);
+}
+function dl(name,content,mime){
+  var blob=new Blob([content],{type:mime||'text/plain;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },400);
+}
+function b64(buf){ var b=new Uint8Array(buf),s='',i; for(i=0;i<b.length;i++){ s+=String.fromCharCode(b[i]); } return btoa(s); }
+function unb64(str){ var s=atob(str),b=new Uint8Array(s.length),i; for(i=0;i<s.length;i++){ b[i]=s.charCodeAt(i); } return b; }
+function nowISO(){ return new Date().toISOString(); }
+function fmtTime(t){ if(!t) return '-'; var d=new Date(t);
+  var p=function(n){ return n<10?'0'+n:''+n; };
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+
+/* ---------- 状态 ---------- */
+var TYPES = {
+  game :{label:'游戏', icon:'game'},
+  app  :{label:'应用', icon:'app'},
+  web  :{label:'网站', icon:'web'},
+  other:{label:'其他', icon:'other'}
+};
+var state = {
+  unlocked:false, key:null, saltB64:null,
+  items:[], settings:{ theme:'light', autoLock:300, view:'grid', sort:'updated' },
+  filter:{ type:'all', fav:false, tag:null, special:null },
+  search:'', revealed:{}
+};
+
+function defaultSettings(){ return { theme:'light', autoLock:300, view:'grid', sort:'updated', sync:{} }; }
+
+/* ---------- 加密 ---------- */
+function hasCrypto(){ return !!(window.crypto && window.crypto.subtle); }
+function deriveKey(pwd,salt){
+  var km = crypto.subtle.importKey('raw', new TextEncoder().encode(pwd), 'PBKDF2', false, ['deriveKey']);
+  return km.then(function(k){
+    return crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:KDF_ITER,hash:'SHA-256'}, k,
+      {name:'AES-GCM',length:256}, false, ['encrypt','decrypt']);
+  });
+}
+function encryptPayload(obj,key){
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  return crypto.subtle.encrypt({name:'AES-GCM',iv:iv}, key, new TextEncoder().encode(JSON.stringify(obj)))
+    .then(function(ct){ return {iv:b64(iv), data:b64(ct)}; });
+}
+function decryptPayload(enc,key){
+  return crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(enc.iv)}, key, unb64(enc.data))
+    .then(function(pt){ return JSON.parse(new TextDecoder().decode(pt)); });
+}
+function persist(){
+  if(!state.key) return Promise.resolve();
+  var payload={ m:MAGIC, items:state.items, settings:state.settings, updatedAt:Date.now() };
+  return encryptPayload(payload,state.key).then(function(enc){
+    localStorage.setItem(LS_KEY, JSON.stringify({v:1,salt:state.saltB64,iv:enc.iv,data:enc.data}));
+  }).then(function(){ schedulePush(); });
+}
+
+/* ---------- 锁屏 ---------- */
+function showLock(mode){
+  var isSetup = (mode==='setup');
+  var has = !!localStorage.getItem(LS_KEY);
+  if(isSetup===undefined){ isSetup = !has; }
+  $('#lockLogo').innerHTML = ic(isSetup?'shield':'lock',26,1.7);
+  $('#lockTitle').textContent = isSetup?'创建你的密码库':'账号管家已锁定';
+  $('#lockSub').textContent = isSetup
+    ? '设置一个主密码，它用来加密你保存的所有账号'
+    : '请输入主密码以解锁';
+  $('#pwd1').value=''; $('#pwd2').value=''; $('#lockErr').textContent='';
+  $('#pwd1').placeholder = isSetup?'设置主密码（至少 6 位）':'主密码';
+  $('#pwd2').style.display = isSetup?'':'none';
+  $('#lockBtn').textContent = isSetup?'创建并进入':'解锁';
+  $('#lockFoot').innerHTML = isSetup
+    ? '<div class="lock-tip">主密码<b>不会被保存</b>，也无法找回。请务必牢记，或抄写在安全的地方。<br>忘记主密码 = 数据无法恢复，只能重新创建。</div>'
+    : (state.items.length ? '' : '<div class="lock-tip">忘记主密码？本机数据将无法解密。你可以 <button id="resetBtn">清空数据并重新创建</button>（旧数据不可恢复）。</div>');
+  if(!isSetup && !state.items.length){
+    var rb=$('#resetBtn');
+    if(rb) rb.onclick=function(){
+      if(confirm('确定清空本机所有账号数据并重新创建密码库吗？\n此操作不可恢复！')){
+        localStorage.removeItem(LS_KEY); state.items=[]; state.settings=defaultSettings(); showLock('setup');
+      }
+    };
+  }
+  $('#lockScreen').classList.remove('hidden');
+  $('#app').classList.add('hidden');
+  setTimeout(function(){ $('#pwd1').focus(); },80);
+}
+$('#lockForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var p1=$('#pwd1').value, p2=$('#pwd2').value;
+  var setup = $('#pwd2').style.display!=='none';
+  $('#lockErr').textContent='';
+  if(!p1){ $('#lockErr').textContent='请输入主密码'; return; }
+  if(setup){
+    if(p1.length<6){ $('#lockErr').textContent='主密码至少 6 位'; return; }
+    if(p1!==p2){ $('#lockErr').textContent='两次输入的密码不一致'; return; }
+    createVault(p1);
+  }else{
+    unlock(p1);
+  }
+});
+
+function createVault(pwd){
+  var btn=$('#lockBtn'); btn.disabled=true; btn.textContent='正在加密…';
+  var salt=crypto.getRandomValues(new Uint8Array(16));
+  var t0=Date.now();
+  deriveKey(pwd,salt).then(function(key){
+    state.key=key; state.saltB64=b64(salt); state.items=[]; state.settings=defaultSettings();
+    return persist();
+  }).then(function(){
+    btn.disabled=false;
+    var cost=Date.now()-t0;
+    enterApp();
+    toast('密码库已创建（密钥派生耗时 '+cost+'ms）');
+  }).catch(function(err){
+    btn.disabled=false; btn.textContent='创建并进入';
+    $('#lockErr').textContent='创建失败：'+err.message;
+  });
+}
+function unlock(pwd){
+  var raw;
+  try{ raw=JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(e){ raw=null; }
+  if(!raw){ showLock('setup'); return; }
+  var btn=$('#lockBtn'); btn.disabled=true; btn.textContent='正在解密…';
+  deriveKey(pwd, unb64(raw.salt)).then(function(key){
+    return decryptPayload(raw,key).then(function(p){
+      if(!p || p.m!==MAGIC) throw new Error('bad');
+      state.key=key; state.saltB64=raw.salt;
+      state.items=Array.isArray(p.items)?p.items:[];
+      state.settings=Object.assign(defaultSettings(), p.settings||{});
+      return true;
+    }).catch(function(){ return false; });
+  }).then(function(ok){
+    btn.disabled=false; btn.textContent='解锁';
+    if(ok){ enterApp(); }
+    else { $('#lockErr').textContent='主密码错误，无法解密'; $('#pwd1').select(); }
+  }).catch(function(err){
+    btn.disabled=false; btn.textContent='解锁';
+    $('#lockErr').textContent='解锁失败：'+err.message;
+  });
+}
+function lockNow(){
+  state.unlocked=false; state.key=null; state.items=[]; state.revealed={};
+  $('#app').classList.add('hidden');
+  showLock('login');
+}
+
+/* ---------- 进入 ---------- */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.settings.theme==='dark'?'dark':'light');
+  $('#themeBtn').innerHTML = ic(state.settings.theme==='dark'?'sun':'moon');
+}
+function enterApp(){
+  state.unlocked=true;
+  $('#lockScreen').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  applyTheme();
+  $('#sortSel').value = state.settings.sort||'updated';
+  setView(state.settings.view||'grid');
+  renderAll();
+  if(syncReady()){ setTimeout(pullSync, 600); }
+}
+function setView(v){
+  state.settings.view=v;
+  $$('#viewSeg button').forEach(function(b){ b.classList.toggle('active', b.dataset.view===v); });
+}
+
+/* ---------- 统计与筛选 ---------- */
+function pwdScore(p){
+  if(!p) return 0;
+  var s=0; s+=Math.min(p.length,16)*3;
+  if(/[a-z]/.test(p)) s+=5;
+  if(/[A-Z]/.test(p)) s+=5;
+  if(/[0-9]/.test(p)) s+=5;
+  if(/[^A-Za-z0-9]/.test(p)) s+=9;
+  if(p.length>=12) s+=8;
+  if(/^(123456|12345678|123456789|111111|000000|password|abc123|qwerty|iloveyou|admin|a123456|5201314)$/i.test(p)) s=6;
+  if(/^(.)\1+$/.test(p)) s=6;
+  return Math.max(0,Math.min(100,s));
+}
+function pwdLevel(p){
+  var s=pwdScore(p);
+  if(!p) return {t:'无',c:'var(--muted)',v:0};
+  if(s<40) return {t:'弱',c:'var(--danger)',v:s};
+  if(s<70) return {t:'中',c:'var(--warn)',v:s};
+  return {t:'强',c:'var(--ok)',v:s};
+}
+function weakSet(){
+  var m={};
+  state.items.forEach(function(it){ if(it.password && pwdScore(it.password)<40) m[it.id]=1; });
+  return m;
+}
+function dupSet(){
+  var c={},m={};
+  state.items.forEach(function(it){ if(!it.password) return; c[it.password]=(c[it.password]||0)+1; });
+  state.items.forEach(function(it){ if(it.password && c[it.password]>1) m[it.id]=1; });
+  return m;
+}
+function countBy(type){
+  if(type==='all') return state.items.length;
+  if(type==='fav') return state.items.filter(function(i){ return i.fav; }).length;
+  return state.items.filter(function(i){ return i.type===type; }).length;
+}
+function visibleItems(){
+  var q=state.search.trim().toLowerCase();
+  var f=state.filter;
+  var weak=weakSet(), dup=dupSet();
+  var arr=state.items.filter(function(it){
+    if(f.type!=='all' && it.type!==f.type) return false;
+    if(f.fav && !it.fav) return false;
+    if(f.tag && (it.tags||[]).indexOf(f.tag)<0) return false;
+    if(f.special==='weak' && !weak[it.id]) return false;
+    if(f.special==='dup' && !dup[it.id]) return false;
+    if(q){
+      var hay=[it.title,it.account,it.password,it.region,it.role,it.rank,it.phone,it.email,it.url,it.remark,(it.tags||[]).join(' ')]
+        .join(' ').toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+  var s=state.settings.sort||'updated';
+  arr.sort(function(a,b){
+    if(s==='name') return String(a.title||'').localeCompare(String(b.title||''),'zh');
+    if(s==='type') return (a.type||'').localeCompare(b.type||'') || String(a.title||'').localeCompare(String(b.title||''),'zh');
+    if(s==='created') return (b.createdAt||0)-(a.createdAt||0);
+    return (b.updatedAt||0)-(a.updatedAt||0);
+  });
+  return arr;
+}
+
+/* ---------- 渲染 ---------- */
+function renderAll(){ renderNav(); renderStats(); renderList(); }
+function renderNav(){
+  var types=[['all','全部','folder']].concat(Object.keys(TYPES).map(function(k){ return [k,TYPES[k].label,TYPES[k].icon]; }));
+  var html=types.map(function(t){
+    var active = state.filter.type===t[0] && !state.filter.fav && !state.filter.special;
+    return '<div class="nav-item'+(active?' active':'')+'" data-type="'+t[0]+'">'+ic(t[2])+'<span>'+t[1]+'</span><span class="count">'+countBy(t[0])+'</span></div>';
+  }).join('');
+  html+='<div class="nav-item'+(state.filter.fav?' active':'')+'" data-fav="1">'+ic('star')+'<span>收藏</span><span class="count">'+countBy('fav')+'</span></div>';
+  $('#navTypes').innerHTML=html;
+
+  var tags={};
+  state.items.forEach(function(it){ (it.tags||[]).forEach(function(t){ tags[t]=(tags[t]||0)+1; }); });
+  var keys=Object.keys(tags).sort();
+  $('#navTags').innerHTML = keys.length
+    ? keys.map(function(t){
+        return '<div class="nav-item'+(state.filter.tag===t?' active':'')+'" data-tag="'+esc(t)+'">'+ic('key',15)+'<span>'+esc(t)+'</span><span class="count">'+tags[t]+'</span></div>';
+      }).join('')
+    : '<div style="padding:6px 10px;font-size:12px;color:var(--muted)">暂无标签</div>';
+}
+function renderStats(){
+  var w=Object.keys(weakSet()).length, d=Object.keys(dupSet()).length;
+  var cards=[
+    ['全部账号', state.items.length, '', 'all'],
+    ['游戏账号', countBy('game'), '', 'game'],
+    ['应用 / 网站', countBy('app')+countBy('web'), '', 'app'],
+    ['弱密码', w, w?'warn':'', 'weak'],
+    ['重复密码', d, d?'danger':'', 'dup']
+  ];
+  $('#stats').innerHTML = cards.map(function(c){
+    return '<div class="stat '+c[2]+'" data-stat="'+c[3]+'">'+
+      '<div class="k">'+c[0]+'</div><div class="v">'+c[1]+'</div></div>';
+  }).join('');
+}
+function renderList(){
+  var arr=visibleItems();
+  var f=state.filter;
+  var title = f.special==='weak' ? '弱密码账号'
+    : f.special==='dup' ? '重复使用的密码'
+    : f.fav ? '我的收藏'
+    : f.tag ? ('标签：'+f.tag)
+    : (f.type==='all'?'全部账号':TYPES[f.type].label+'账号');
+  $('#listTitle').textContent=title;
+  $('#listCount').textContent='共 '+arr.length+' 条';
+  if(!arr.length){
+    $('#list').innerHTML='<div class="empty"><div class="big">'+ic('folder',44,1.4)+'</div>'+
+      '<h3>'+(state.items.length?'没有匹配的账号':'还没有保存任何账号')+'</h3>'+
+      '<p>'+(state.items.length?'试试换个关键词或切换分类':'点击右上角「新增」保存第一个账号吧')+'</p>'+
+      (state.items.length?'':'<button class="btn primary" data-act="add">'+ic('plus')+'新增账号</button>')+'</div>';
+    return;
+  }
+  if(state.settings.view==='table') renderTable(arr); else renderGrid(arr);
+}
+function renderGrid(arr){
+  $('#list').innerHTML='<div class="grid">'+arr.map(cardHTML).join('')+'</div>';
+}
+function cardHTML(it){
+  var t=TYPES[it.type]||TYPES.other;
+  var rev=!!state.revealed[it.id];
+  var lv=pwdLevel(it.password);
+  var rows='';
+  rows+=rowHTML('账号', it.account||'-', 'copy', 'account', it.id, false);
+  rows+=rowHTML('密码', it.password||'', 'pwd', 'password', it.id, !rev);
+  if(it.type==='game'){
+    rows+=rowHTML('大区', it.region||'-', 'copy','region', it.id, false);
+    rows+=rowHTML('角色', it.role||'-', 'copy','role', it.id, false);
+    if(it.rank) rows+=rowHTML('段位', it.rank, 'copy','rank', it.id, false);
+  }
+  if(it.phone) rows+=rowHTML('手机', it.phone, 'copy','phone', it.id, false);
+  if(it.email) rows+=rowHTML('邮箱', it.email, 'copy','email', it.id, false);
+  if(it.url){
+    var href = /^https?:\/\//i.test(it.url) ? it.url : 'https://'+it.url;
+    rows+='<div class="row"><span class="lb">网址</span><span class="val"><a href="'+esc(href)+'" target="_blank" rel="noopener" style="color:var(--accent)">'+esc(it.url)+'</a></span></div>';
+  }
+  var tags=(it.tags&&it.tags.length)?'<div class="tags">'+it.tags.map(function(x){ return '<span class="tag">'+esc(x)+'</span>'; }).join('')+'</div>':'';
+  return '<div class="card" data-id="'+it.id+'">'+
+    '<div class="card-head">'+
+      '<div class="avatar">'+ic(t.icon,19)+'</div>'+
+      '<div style="min-width:0">'+
+        '<div class="card-title">'+esc(it.title)+'</div>'+
+        '<span class="badge">'+t.label+'</span>'+
+        (it.type==='game'&&it.region?'<span class="badge" style="margin-left:5px">'+esc(it.region)+'</span>':'')+
+      '</div>'+
+      '<button class="fav-btn'+(it.fav?' on':'')+'" data-act="fav" title="收藏">'+ic(it.fav?'starfill':'star',17)+'</button>'+
+    '</div>'+
+    '<div class="rows">'+rows+'</div>'+
+    tags+
+    (it.remark?'<div class="remark">'+esc(it.remark)+'</div>':'')+
+    '<div class="card-foot">'+
+      '<button class="btn sm" data-act="edit">'+ic('edit',15)+'编辑</button>'+
+      '<button class="btn sm" data-act="copy-pwd">'+ic('copy',15)+'复制密码</button>'+
+      '<div class="spacer"></div>'+
+      '<button class="btn sm ghost" data-act="del" style="color:var(--danger)">'+ic('trash',15)+'</button>'+
+    '</div>'+
+  '</div>';
+}
+function rowHTML(label,val,kind,field,id,mask){
+  var show = mask ? '••••••••' : esc(val);
+  return '<div class="row"><span class="lb">'+label+'</span>'+
+    '<span class="val'+(mask?' mask':'')+'" data-field="'+field+'">'+show+'</span>'+
+    '<button class="act" data-act="'+kind+'" data-field="'+field+'" title="复制">'+ic('copy',15)+'</button>'+
+    (kind==='pwd'?'<button class="act" data-act="toggle" title="显示/隐藏">'+ic(mask?'eye':'eyeoff',15)+'</button>':'')+
+  '</div>';
+}
+function renderTable(arr){
+  var h='<div class="tbl-wrap"><table><thead><tr>'+
+    '<th>名称</th><th>类型</th><th>账号</th><th>密码</th><th>大区</th><th>角色名</th><th>更新时间</th><th>操作</th>'+
+    '</tr></thead><tbody>';
+  arr.forEach(function(it){
+    var t=TYPES[it.type]||TYPES.other;
+    var rev=!!state.revealed[it.id];
+    h+='<tr data-id="'+it.id+'">'+
+      '<td>'+(it.fav?'<span style="color:var(--warn)">'+ic('starfill',13)+'</span> ':'')+esc(it.title)+'</td>'+
+      '<td>'+t.label+'</td>'+
+      '<td>'+esc(it.account||'-')+' <button class="act" data-act="copy" data-field="account" title="复制">'+ic('copy',14)+'</button></td>'+
+      '<td><span data-field="password">'+(rev?esc(it.password):'••••••')+'</span> '+
+        '<button class="act" data-act="toggle" title="显示">'+ic(rev?'eyeoff':'eye',14)+'</button> '+
+        '<button class="act" data-act="copy" data-field="password" title="复制">'+ic('copy',14)+'</button></td>'+
+      '<td>'+esc(it.region||'-')+'</td>'+
+      '<td>'+esc(it.role||'-')+'</td>'+
+      '<td style="color:var(--muted)">'+fmtTime(it.updatedAt||it.createdAt)+'</td>'+
+      '<td class="ops"><div class="ops-in"><button class="btn sm" data-act="edit">编辑</button><button class="btn sm" data-act="del" style="color:var(--danger)">删除</button></div></td>'+
+    '</tr>';
+  });
+  $('#list').innerHTML=h+'</tbody></table></div>';
+}
+
+/* ---------- 编辑弹窗 ---------- */
+function openModal(title,bodyHTML,footHTML){
+  var root=$('#modalRoot');
+  root.innerHTML='<div class="mask"><div class="modal">'+
+    '<div class="modal-head"><h2>'+esc(title)+'</h2><div class="spacer" style="flex:1"></div>'+
+      '<button class="btn ghost icon-only" data-close="1">'+ic('x')+'</button></div>'+
+    '<div class="modal-body">'+bodyHTML+'</div>'+
+    (footHTML?'<div class="modal-foot">'+footHTML+'</div>':'')+
+  '</div></div>';
+  var m=$('.mask',root);
+  m.addEventListener('click',function(e){ if(e.target===m) closeModal(); });
+  $('[data-close]',root).addEventListener('click',closeModal);
+  $$('[data-close]',root).forEach(function(b){ b.addEventListener('click',closeModal); });
+  return root;
+}
+function closeModal(){ $('#modalRoot').innerHTML=''; }
+
+function openEditor(id){
+  var it = id ? state.items.filter(function(x){ return x.id===id; })[0] : null;
+  var d = it || { id:'', type:'game', title:'', account:'', password:'', region:'', role:'', rank:'',
+                  phone:'', email:'', url:'', remark:'', tags:[], fav:false };
+  var body=
+    '<div><div style="font-size:12.5px;color:var(--muted);margin-bottom:6px">类型</div>'+
+      '<div class="seg" id="typeSeg">'+
+        Object.keys(TYPES).map(function(k){
+          return '<button data-t="'+k+'"'+(d.type===k?' class="active"':'')+'>'+ic(TYPES[k].icon,15)+TYPES[k].label+'</button>';
+        }).join('')+
+      '</div></div>'+
+    '<label class="fld"><span>名称 <b style="color:var(--danger)">*</b></span>'+
+      '<input id="f_title" value="'+esc(d.title)+'" placeholder="如：英雄联盟 / 微信 / 原神"></label>'+
+    '<div class="grid2">'+
+      '<label class="fld"><span>账号</span><input id="f_account" value="'+esc(d.account)+'" placeholder="登录账号 / 手机号 / 邮箱"></label>'+
+      '<label class="fld"><span>绑定手机</span><input id="f_phone" value="'+esc(d.phone)+'"></label>'+
+    '</div>'+
+    '<label class="fld"><span>密码</span>'+
+      '<div class="pwd-line"><input id="f_password" type="password" value="'+esc(d.password)+'">'+
+      '<button class="btn icon-only" id="f_toggle" type="button">'+ic('eye')+'</button>'+
+      '<button class="btn icon-only" id="f_gen" type="button" title="生成随机密码">'+ic('dice')+'</button></div>'+
+      '<div class="strength"><i id="f_bar" style="width:0%;background:var(--muted)"></i></div>'+
+      '<div class="slabel"><span id="f_lv"></span><span id="f_len"></span></div>'+
+    '</label>'+
+    '<div id="gameFields">'+
+      '<div class="grid2">'+
+        '<label class="fld"><span>大区 / 服务器</span><input id="f_region" value="'+esc(d.region)+'" placeholder="如：艾欧尼亚 / 天空岛"></label>'+
+        '<label class="fld"><span>角色名</span><input id="f_role" value="'+esc(d.role)+'"></label>'+
+      '</div>'+
+      '<label class="fld"><span>段位 / 等级（选填）</span><input id="f_rank" value="'+esc(d.rank)+'" placeholder="如：钻石 II / 60 级"></label>'+
+    '</div>'+
+    '<div class="grid2">'+
+      '<label class="fld"><span>绑定邮箱</span><input id="f_email" value="'+esc(d.email)+'"></label>'+
+      '<label class="fld"><span>网址 / 下载页</span><input id="f_url" value="'+esc(d.url)+'" placeholder="https://"></label>'+
+    '</div>'+
+    '<label class="fld"><span>标签（用逗号分隔）</span><input id="f_tags" value="'+esc((d.tags||[]).join(', '))+'" placeholder="如：常用, 腾讯, 主力号"></label>'+
+    '<label class="fld"><span>备注</span><textarea id="f_remark" placeholder="密保问题、二次验证、付费信息等">'+esc(d.remark)+'</textarea></label>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">'+
+      '<input type="checkbox" id="f_fav" '+(d.fav?'checked':'')+' style="width:auto"> 加入收藏</label>';
+
+  var foot='<button class="btn" data-close="1">取消</button><button class="btn primary" id="saveBtn">'+ic('check',15)+'保存</button>';
+  openModal(it?'编辑账号':'新增账号', body, foot);
+  var R=$('#modalRoot');
+
+  // 类型切换
+  $$('#typeSeg button',R).forEach(function(b){
+    b.onclick=function(){
+      $$('#typeSeg button',R).forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      $('#gameFields',R).style.display = b.dataset.t==='game' ? '' : 'none';
+    };
+  });
+  $('#gameFields',R).style.display = d.type==='game' ? '' : 'none';
+
+  // 密码显示 & 强度
+  var pw=$('#f_password',R);
+  function upd(){
+    var lv=pwdLevel(pw.value);
+    $('#f_bar',R).style.width=lv.v+'%'; $('#f_bar',R).style.background=lv.c;
+    $('#f_lv',R).innerHTML = pw.value?('强度：<b style="color:'+lv.c+'">'+lv.t+'</b>'):'未设置密码';
+    $('#f_len',R).textContent = pw.value?pw.value.length+' 位':'';
+  }
+  pw.addEventListener('input',upd); upd();
+  $('#f_toggle',R).onclick=function(){ pw.type = pw.type==='password'?'text':'password'; };
+  $('#f_gen',R).onclick=function(){ pw.value=genPassword(16); pw.type='text'; upd(); };
+
+  $('#saveBtn',R).onclick=function(){
+    var title=$('#f_title',R).value.trim();
+    if(!title){ toast('请填写名称'); $('#f_title',R).focus(); return; }
+    var type=$('#typeSeg button.active',R).dataset.t;
+    var tags=$('#f_tags',R).value.split(/[,，]/).map(function(s){ return s.trim(); }).filter(Boolean);
+    var obj={
+      id: it?it.id:uid(),
+      type:type, title:title,
+      account:$('#f_account',R).value.trim(),
+      password:$('#f_password',R).value,
+      region:$('#f_region',R).value.trim(),
+      role:$('#f_role',R).value.trim(),
+      rank:$('#f_rank',R).value.trim(),
+      phone:$('#f_phone',R).value.trim(),
+      email:$('#f_email',R).value.trim(),
+      url:$('#f_url',R).value.trim(),
+      remark:$('#f_remark',R).value.trim(),
+      tags:tags, fav:$('#f_fav',R).checked,
+      createdAt: it?it.createdAt:Date.now(), updatedAt:Date.now()
+    };
+    if(it){ state.items=state.items.map(function(x){ return x.id===it.id?obj:x; }); }
+    else { state.items.unshift(obj); }
+    persist().then(function(){ closeModal(); renderAll(); toast(it?'已保存':'已添加'); });
+  };
+  setTimeout(function(){ $('#f_title',R).focus(); },60);
+}
+
+function genPassword(len){
+  len=len||16;
+  var lower='abcdefghijkmnopqrstuvwxyz', upper='ABCDEFGHJKLMNPQRSTUVWXYZ',
+      num='23456789', sym='!@#$%^&*()-_=+?';
+  var all=lower+upper+num+sym, out='', i;
+  var rnd=function(n){ return crypto.getRandomValues(new Uint32Array(1))[0]%n; };
+  out+=lower[rnd(lower.length)]+upper[rnd(upper.length)]+num[rnd(num.length)]+sym[rnd(sym.length)];
+  for(i=4;i<len;i++){ out+=all[rnd(all.length)]; }
+  return out.split('').sort(function(){ return rnd(3)-1; }).join('');
+}
+
+/* ---------- 复制 ---------- */
+var clearTimer=null;
+function copyText(t){
+  if(t==null||t===''){ toast('内容为空'); return; }
+  var done=function(){ toast('已复制（15 秒后自动清除剪贴板）');
+    clearTimeout(clearTimer);
+    clearTimer=setTimeout(function(){ try{ navigator.clipboard.writeText(''); }catch(e){} },15000);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done).catch(function(){ legacyCopy(t,done); });
+  }else{ legacyCopy(t,done); }
+}
+function legacyCopy(t,done){
+  var ta=document.createElement('textarea'); ta.value=t;
+  ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('复制失败，请手动选择'); }
+  ta.remove();
+}
+
+/* ---------- 设置 / 备份 ---------- */
+function openSettings(){
+  var body=
+    '<label class="fld"><span>界面主题</span><select id="s_theme">'+
+      '<option value="light">浅色</option><option value="dark">深色</option></select></label>'+
+    '<label class="fld"><span>无操作自动锁定</span><select id="s_lock">'+
+      '<option value="60">1 分钟</option><option value="300">5 分钟</option>'+
+      '<option value="900">15 分钟</option><option value="0">永不（不推荐）</option></select></label>'+
+    '<div style="border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:9px">'+
+      '<div style="font-size:12.5px;color:var(--muted)">云同步 · 端到端加密（零知识，服务器只看得到密文）</div>'+
+      '<label class="fld"><span>同步后端</span><select id="sy_backend">'+
+        '<option value="cloudflare">Cloudflare Workers（推荐·免费）</option>'+
+        '<option value="github">GitHub Gist（免部署）</option></select></label>'+
+      '<div id="sy_cf">'+
+        '<label class="fld"><span>Cloudflare Worker 地址</span><input id="sy_url" placeholder="https://xxx.workers.dev"></label>'+
+        '<label class="fld"><span>Cloudflare 访问令牌（可选）</span><input id="sy_token" placeholder="与 Worker 变量 SYNC_TOKEN 一致"></label>'+
+      '</div>'+
+      '<div id="sy_gh" style="display:none">'+
+        '<label class="fld"><span>GitHub 令牌 PAT（必填）</span><input id="sy_pat" type="password" placeholder="必须以 ghp_ 开头，classic token"></label>'+
+        '<div class="lock-tip">必须是 <b>classic token</b>（以 <code>ghp_</code> 开头），新版 <code>github_pat_</code> 不支持 Gist。生成路径：GitHub → Settings → Developer settings → Personal access tokens → <b>Tokens (classic)</b>，权限只勾 <b>gist</b>。</div>'+
+        '<label class="fld"><span>Gist ID（留空可自动创建/发现）</span><input id="sy_gist" placeholder="点下方按钮创建或自动发现"></label>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+          '<button class="btn" id="sy_gist_create">'+ic('plus',15)+'创建新 Gist</button>'+
+          '<button class="btn" id="sy_gist_find">'+ic('search',15)+'发现已有 Gist</button>'+
+        '</div>'+
+        '<div class="lock-tip">换设备时用「发现已有 Gist」：填好 PAT + 同步 ID，程序会用你的令牌自动找到电脑端创建的那条同步仓库。</div>'+
+      '</div>'+
+      '<label class="fld"><span>同步 ID（跨设备一致，必填）</span><input id="sy_id" placeholder="例如 me@qq.com"></label>'+
+      '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">'+
+        '<input type="checkbox" id="sy_auto" style="width:auto"> 自动同步（每次修改后自动上传）</label>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn" id="sy_now">'+ic('refresh',15)+'立即同步</button>'+
+        '<button class="btn" id="sy_push">'+ic('upload',15)+'仅上传到云端</button>'+
+      '</div>'+
+      '<div id="sy_status" style="font-size:12px;color:var(--muted)"></div>'+
+    '</div>'+
+    '<div style="border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:9px">'+
+      '<div style="font-size:12.5px;color:var(--muted)">数据安全</div>'+
+      '<button class="btn" id="s_chpwd">'+ic('key',15)+'修改主密码</button>'+
+      '<button class="btn" id="s_export">'+ic('download',15)+'导出加密备份文件</button>'+
+      '<button class="btn" id="s_import">'+ic('upload',15)+'从备份文件导入</button>'+
+      '<button class="btn" id="s_csv">'+ic('download',15)+'导出 CSV（明文，谨慎）</button>'+
+      '<button class="btn danger" id="s_wipe">'+ic('trash',15)+'清空全部数据</button>'+
+    '</div>'+
+    '<div style="font-size:12px;color:var(--muted);line-height:1.7">当前共 <b>'+state.items.length+'</b> 条记录，'+
+      '数据保存在本机浏览器存储中，并使用主密码加密（PBKDF2-SHA256 20 万次 + AES-GCM）。</div>';
+  openModal('设置', body, '');
+  var R=$('#modalRoot');
+  $('#s_theme',R).value=state.settings.theme;
+  $('#s_lock',R).value=String(state.settings.autoLock);
+  $('#s_theme',R).onchange=function(){ state.settings.theme=this.value; applyTheme(); persist(); };
+  $('#s_lock',R).onchange=function(){ state.settings.autoLock=parseInt(this.value,10)||0; persist(); toast('已保存'); };
+  $('#s_chpwd',R).onclick=function(){ closeModal(); openChangePwd(); };
+  $('#s_export',R).onclick=function(){
+    var name='账号管家备份_'+new Date().toISOString().slice(0,10)+'.avb';
+    dl(name, localStorage.getItem(LS_KEY)||'', 'application/json');
+    toast('备份已导出，请妥善保管');
+  };
+  $('#s_import',R).onclick=function(){ closeModal(); openImport(); };
+  $('#s_csv',R).onclick=function(){
+    if(!confirm('CSV 为明文文件，任何人打开都能看到你的密码。\n确定要导出吗？')) return;
+    var head=['名称','类型','账号','密码','大区','角色名','段位','绑定手机','绑定邮箱','网址','标签','备注','更新时间'];
+    var esc2=function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; };
+    var lines=[head.map(esc2).join(',')];
+    state.items.forEach(function(it){
+      lines.push([it.title,(TYPES[it.type]||TYPES.other).label,it.account,it.password,it.region,it.role,it.rank,
+        it.phone,it.email,it.url,(it.tags||[]).join(' '),it.remark,fmtTime(it.updatedAt)].map(esc2).join(','));
+    });
+    dl('账号管家_'+new Date().toISOString().slice(0,10)+'.csv','\ufeff'+lines.join('\r\n'),'text/csv;charset=utf-8');
+    toast('CSV 已导出');
+  };
+  $('#s_wipe',R).onclick=function(){
+    if(!confirm('将永久删除本机的全部 '+state.items.length+' 条账号数据！\n此操作不可恢复，确定继续吗？')) return;
+    if(!confirm('再次确认：真的要清空所有数据？')) return;
+    localStorage.removeItem(LS_KEY); state.items=[]; state.key=null; state.unlocked=false;
+    closeModal(); showLock('setup'); toast('数据已清空');
+  };
+  /* 云同步设置 */
+  var sy=state.settings.sync||{};
+  $('#sy_backend',R).value=sy.backend||'cloudflare';
+  $('#sy_url',R).value=sy.url||''; $('#sy_token',R).value=sy.token||'';
+  $('#sy_gist',R).value=sy.gistId||''; $('#sy_pat',R).value=sy.token2||'';
+  $('#sy_id',R).value=sy.syncId||''; $('#sy_auto',R).checked=!!sy.auto;
+  function syToggle(){ var b=$('#sy_backend',R).value; $('#sy_cf',R).style.display=b==='cloudflare'?'':'none'; $('#sy_gh',R).style.display=b==='github'?'':'none'; }
+  syToggle();
+  $('#sy_backend',R).onchange=syToggle;
+  function saveSy(){ state.settings.sync={ enabled:true, backend:$('#sy_backend',R).value, url:$('#sy_url',R).value.trim(),
+    token:$('#sy_token',R).value.trim(), gistId:$('#sy_gist',R).value.trim(), token2:$('#sy_pat',R).value.trim(),
+    syncId:$('#sy_id',R).value.trim(), auto:$('#sy_auto',R).checked, lastSync:sy.lastSync }; persist(); updateSyStatus(); }
+  ['sy_backend','sy_url','sy_token','sy_gist','sy_pat','sy_id','sy_auto'].forEach(function(id){
+    var el=$('#'+id,R); if(el){ el.onchange=el.oninput=saveSy; }
+  });
+  $('#sy_now',R).onclick=function(){ saveSy(); $('#sy_status',R).textContent='同步中…'; pushSync(); setTimeout(pullSync,1100); };
+  $('#sy_push',R).onclick=function(){ saveSy(); pushSync(); };
+  $('#sy_gist_create',R).onclick=function(){
+    var pat=$('#sy_pat',R).value.trim();
+    if(!pat){ toast('请先填写 GitHub 令牌 PAT'); $('#sy_pat',R).focus(); return; }
+    toast('正在创建 Gist…');
+    ghCreate({token2:pat}).then(function(id){
+      if(id){ $('#sy_gist',R).value=id; saveSy(); toast('已创建 Gist，ID：'+id); }
+    }).catch(function(err){ toast('创建失败：'+(err&&err.message||err)); });
+  };
+  $('#sy_gist_find',R).onclick=function(){
+    var pat=$('#sy_pat',R).value.trim();
+    if(!pat){ toast('请先填写 GitHub 令牌 PAT'); $('#sy_pat',R).focus(); return; }
+    toast('正在查找已有 Gist…');
+    ghDiscover({token2:pat}).then(function(id){
+      if(id){ $('#sy_gist',R).value=id; saveSy(); toast('已找到 Gist，ID：'+id+'，请点「立即同步」'); }
+      else toast('未找到 AccountVault 同步仓库，请确认 PAT 正确，或用「创建新 Gist」');
+    }).catch(function(err){ toast('查找失败：'+(err&&err.message||err)); });
+  };
+  function updateSyStatus(){ var t=state.settings.sync&&state.settings.sync.lastSync;
+    $('#sy_status',R).textContent = t ? ('上次同步：'+fmtTime(t)) : (syncReady()?'已配置，但尚未同步':'填写同步 ID 并点击「立即同步」'); }
+  updateSyStatus();
+}
+function openChangePwd(){
+  var body='<label class="fld"><span>当前主密码</span><input type="password" id="c_old"></label>'+
+    '<label class="fld"><span>新主密码（至少 6 位）</span><input type="password" id="c_new"></label>'+
+    '<label class="fld"><span>确认新主密码</span><input type="password" id="c_new2"></label>'+
+    '<div class="err" id="c_err"></div>'+
+    '<div style="font-size:12px;color:var(--muted);line-height:1.7">修改后请牢记新密码，并用它来打开以后导出的备份文件。</div>';
+  openModal('修改主密码', body,
+    '<button class="btn" data-close="1">取消</button><button class="btn primary" id="c_ok">确认修改</button>');
+  var R=$('#modalRoot');
+  $('#c_ok',R).onclick=function(){
+    var o=$('#c_old',R).value,n=$('#c_new',R).value,n2=$('#c_new2',R).value;
+    var err=function(m){ $('#c_err',R).textContent=m; };
+    err('');
+    if(!o||!n){ err('请填写完整'); return; }
+    if(n.length<6){ err('新密码至少 6 位'); return; }
+    if(n!==n2){ err('两次新密码不一致'); return; }
+    var raw=JSON.parse(localStorage.getItem(LS_KEY));
+    deriveKey(o, unb64(raw.salt)).then(function(k){
+      return decryptPayload(raw,k).then(function(p){
+        if(!p||p.m!==MAGIC) throw new Error('bad'); return p;
+      });
+    }).then(function(p){
+      var salt=crypto.getRandomValues(new Uint8Array(16));
+      return deriveKey(n,salt).then(function(nk){
+        state.saltB64=b64(salt); state.key=nk;
+        state.items=p.items||state.items; state.settings=Object.assign(defaultSettings(),p.settings||{});
+        return persist();
+      });
+    }).then(function(){
+      closeModal(); toast('主密码已更新，请牢记新密码');
+    }).catch(function(){
+      err('当前主密码不正确');
+    });
+  };
+}
+function openImport(){
+  var body='<div class="lock-tip">选择之前导出的 <b>.avb</b> 备份文件，并输入<b>该备份文件的主密码</b>。导入的记录会追加到当前库中（不会覆盖现有数据）。</div>'+
+    '<label class="fld"><span>备份文件</span><input type="file" id="i_file" accept=".avb,.json,application/json"></label>'+
+    '<label class="fld"><span>该备份的主密码</span><input type="password" id="i_pwd"></label>'+
+    '<div class="err" id="i_err"></div>';
+  openModal('导入备份', body, '<button class="btn" data-close="1">取消</button><button class="btn primary" id="i_ok">解密并导入</button>');
+  var R=$('#modalRoot');
+  $('#i_ok',R).onclick=function(){
+    var f=$('#i_file',R).files[0];
+    if(!f){ $('#i_err',R).textContent='请选择备份文件'; return; }
+    var fr=new FileReader();
+    fr.onload=function(){
+      var raw; try{ raw=JSON.parse(fr.result); }catch(e){ $('#i_err',R).textContent='文件格式不正确'; return; }
+      if(!raw || !raw.salt || !raw.data){ $('#i_err',R).textContent='不是有效的备份文件'; return; }
+      deriveKey($('#i_pwd',R).value, unb64(raw.salt)).then(function(k){
+        return decryptPayload(raw,k).then(function(p){
+          if(!p||p.m!==MAGIC) throw new Error('bad');
+          return p;
+        });
+      }).then(function(p){
+        var incoming=p.items||[];
+        if(!incoming.length){ $('#i_err',R).textContent='备份中没有记录'; return; }
+        var exist={};
+        state.items.forEach(function(x){ exist[x.title+'|'+x.account+'|'+x.password]=1; });
+        var added=0;
+        incoming.forEach(function(x){
+          var key=(x.title||'')+'|'+(x.account||'')+'|'+(x.password||'');
+          if(exist[key]) return;
+          exist[key]=1; added++;
+          x.id=uid(); x.createdAt=x.createdAt||Date.now(); x.updatedAt=Date.now();
+          state.items.unshift(x);
+        });
+        return persist().then(function(){
+          closeModal(); renderAll(); toast('导入完成，新增 '+added+' 条（跳过重复 '+(incoming.length-added)+' 条）');
+        });
+      }).catch(function(){ $('#i_err',R).textContent='密码错误或文件已损坏'; });
+    };
+    fr.readAsText(f);
+  };
+}
+/* ---------- 云同步（端到端加密 / 零知识） ---------- */
+function finger(x){ return (x.title||'')+'|'+(x.account||'')+'|'+(x.password||''); }
+function syncReady(){
+  var s=state.settings.sync;
+  if(!s || !s.enabled || !s.syncId || !state.unlocked || !state.key) return false;
+  if(s.backend==='github') return !!(s.token2 && s.gistId);
+  return !!(s.url);
+}
+function syncError(){
+  var s=state.settings.sync;
+  if(!s || !s.enabled) return '请先在设置中开启云同步';
+  if(!s.syncId) return '请填写同步 ID（跨设备一致）';
+  if(s.backend==='github'){
+    if(!s.token2) return '请填写 GitHub 令牌 PAT';
+    if(!/^ghp_[A-Za-z0-9_]{30,}$/.test(s.token2)) return 'PAT 格式不对：必须是 classic token（以 ghp_ 开头），新版 github_pat_ 不支持 Gist';
+    if(!s.gistId) return '请填写 Gist ID，或点「创建新 Gist」自动获取';
+  }else{
+    if(!s.url) return '请填写 Cloudflare Worker 地址';
+  }
+  return null;
+}
+function encryptForSync(){
+  return encryptPayload({ m:MAGIC, items:state.items, t:Date.now() }, state.key);
+}
+function syncHeaders(s){ var h={}; if(s.token) h['X-Sync-Token']=s.token; return h; }
+function cfGet(s){
+  return fetch(s.url+'?id='+encodeURIComponent(s.syncId), {headers:syncHeaders(s)})
+    .then(function(r){ if(r.status===404) return ''; if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); });
+}
+function cfPut(s, body){
+  return fetch(s.url+'?id='+encodeURIComponent(s.syncId), {method:'PUT',
+    headers:Object.assign({'content-type':'application/json'}, syncHeaders(s)), body:body})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
+}
+function ghHeaders(s){ var h={'accept':'application/vnd.github+json'}; if(s.token2) h['authorization']='Bearer '+s.token2; return h; }
+function ghGet(s){
+  return fetch('https://api.github.com/gists/'+s.gistId, {headers:ghHeaders(s)})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(j){ var f=j.files && j.files['accountvault.json']; return f?f.content:''; });
+}
+function ghPut(s, body){
+  return fetch('https://api.github.com/gists/'+s.gistId, {method:'PATCH',
+    headers:Object.assign({'content-type':'application/json'}, ghHeaders(s)),
+    body:JSON.stringify({files:{'accountvault.json':{content:body}}})})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
+}
+function ghCreate(s){
+  if(!s.token2){ toast('请先填写 GitHub 令牌 PAT'); return Promise.resolve(); }
+  if(!/^ghp_[A-Za-z0-9_]{30,}$/.test(s.token2)){ toast('PAT 格式不对：必须是 classic token（以 ghp_ 开头），新版 github_pat_ 不支持 Gist'); return Promise.resolve(); }
+  return fetch('https://api.github.com/gists', {method:'POST',
+    headers:Object.assign({'content-type':'application/json'}, ghHeaders(s)),
+    body:JSON.stringify({description:'AccountVault 同步仓库', public:false,
+      files:{'accountvault.json':{content:'{"iv":"","data":""}'}}})})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(j){ return j.id; });
+}
+function ghDiscover(s){
+  if(!s.token2){ toast('请先填写 GitHub 令牌 PAT'); return Promise.resolve(); }
+  if(!/^ghp_[A-Za-z0-9_]{30,}$/.test(s.token2)){ toast('PAT 格式不对：必须是 classic token（以 ghp_ 开头）'); return Promise.resolve(); }
+  return fetch('https://api.github.com/gists', {headers:ghHeaders(s)})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(list){
+      var found=null;
+      (list||[]).forEach(function(g){ if(g.description && g.description.indexOf('AccountVault')>=0) found=found||g.id; });
+      return found;
+    });
+}
+function pullBlob(){
+  var s=state.settings.sync;
+  return (s.backend==='github' ? ghGet(s) : cfGet(s)).then(function(text){
+    if(!text) return null;
+    var obj; try{ obj=JSON.parse(text); }catch(e){ throw new Error('云端数据损坏'); }
+    return decryptPayload(obj, state.key);
+  });
+}
+function mergeItems(remote){
+  var byId={}, byFinger={}, added=0;
+  state.items.forEach(function(x){ byId[x.id]=x; byFinger[finger(x)]=x; });
+  (remote||[]).forEach(function(r){
+    if(!r) return;
+    var f=finger(r);
+    if(byId[r.id]){ var l=byId[r.id]; if((r.updatedAt||0)>(l.updatedAt||0)) Object.assign(l,r); return; }
+    if(byFinger[f]){ var l2=byFinger[f]; if((r.updatedAt||0)>(l2.updatedAt||0)) Object.assign(l2,r); return; }
+    added++; r.createdAt=r.createdAt||Date.now(); r.updatedAt=r.updatedAt||Date.now();
+    state.items.unshift(r); byId[r.id]=r; byFinger[f]=r;
+  });
+  return added;
+}
+function pushSync(){
+  var err=syncError(); if(err){ toast(err); return; }
+  var s=state.settings.sync;
+  encryptForSync().then(function(enc){
+    return (s.backend==='github' ? ghPut(s, JSON.stringify({iv:enc.iv,data:enc.data}))
+                                : cfPut(s, JSON.stringify({iv:enc.iv,data:enc.data})));
+  }).then(function(){
+    state.settings.sync.lastSync=Date.now(); persist();
+    toast('已上传到云端');
+  }).catch(function(err){
+    console.warn('pushSync failed', err); toast('上传失败：'+(err&&err.message||err));
+  });
+}
+function pullSync(){
+  var err=syncError(); if(err){ toast(err); return; }
+  pullBlob().then(function(payload){
+    if(!payload) return;
+    if(payload.m!==MAGIC) throw new Error('主密码与云端不一致');
+    var added=mergeItems(payload.items||[]);
+    state.settings.sync.lastSync=payload.t||Date.now();
+    return persist().then(function(){
+      renderAll();
+      toast(added ? ('已同步，合并 '+added+' 条新记录') : '已同步（无新记录）');
+    });
+  }).catch(function(err){
+    console.warn('pullSync failed', err);
+    if(/不一致|损坏/.test(err.message)) toast(err.message); else toast('拉取失败：'+(err&&err.message||err));
+  });
+}
+var _pushTimer=null;
+function schedulePush(){
+  var s=state.settings.sync;
+  if(!s || !s.auto || !syncReady()) return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(pushSync, 800);
+}
+
+function openHelp(){
+  var body='<ul class="help-list">'+
+    '<li><b>保存游戏账号</b>：类型选「游戏」，填写名称、账号、密码，以及<b>大区</b>和<b>角色名</b>（还可填段位/等级）。</li>'+
+    '<li><b>保存应用/网站账号</b>：类型选「应用」或「网站」，填写名称、账号、密码，可补充网址、绑定手机/邮箱。</li>'+
+    '<li><b>一键复制</b>：点行尾的复制图标即可，15 秒后自动清空剪贴板。</li>'+
+    '<li><b>密码生成器</b>：编辑时点骰子图标，自动生成 16 位强随机密码。</li>'+
+    '<li><b>搜索</b>：顶部搜索框支持名称、账号、大区、角色名、备注全字段匹配。</li>'+
+    '<li><b>安全体检</b>：顶部「弱密码」「重复密码」卡片可直接点开筛选，建议尽快修改。</li>'+
+    '</ul>'+
+    '<div style="border-top:1px solid var(--border);padding-top:13px">'+
+      '<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">快捷键</div>'+
+      '<div style="font-size:13px;line-height:2">Ctrl/⌘ + F　搜索<br>Ctrl/⌘ + N　新增账号<br>Ctrl/⌘ + L　立即锁定<br>Esc　关闭弹窗</div>'+
+    '</div>'+
+    '<div class="lock-tip">数据只存在<b>这台电脑</b>上，不会上传到任何服务器。请定期用「备份 / 导出」保存一份 .avb 文件到 U 盘或网盘，防止浏览器数据被清理。</div>';
+  openModal('使用说明', body, '');
+}
+
+/* ---------- 事件绑定 ---------- */
+$('#navTypes').addEventListener('click',function(e){
+  var el=e.target.closest('.nav-item'); if(!el) return;
+  if(el.dataset.fav){ state.filter={type:'all',fav:true,tag:null,special:null}; }
+  else { state.filter={type:el.dataset.type,fav:false,tag:null,special:null}; }
+  renderAll();
+});
+$('#navTags').addEventListener('click',function(e){
+  var el=e.target.closest('.nav-item'); if(!el) return;
+  var t=el.dataset.tag;
+  state.filter = (state.filter.tag===t) ? {type:'all',fav:false,tag:null,special:null} : {type:'all',fav:false,tag:t,special:null};
+  renderAll();
+});
+$('.sidebar-foot').addEventListener('click',function(e){
+  var el=e.target.closest('.nav-item'); if(!el) return;
+  var a=el.dataset.act;
+  if(a==='export'){ openSettings(); }
+  else if(a==='settings'){ openSettings(); }
+  else if(a==='help'){ openHelp(); }
+});
+$('#stats').addEventListener('click',function(e){
+  var el=e.target.closest('.stat'); if(!el) return;
+  var s=el.dataset.stat;
+  if(s==='weak'||s==='dup'){ state.filter={type:'all',fav:false,tag:null,special:s}; }
+  else { state.filter={type:s,fav:false,tag:null,special:null}; }
+  renderAll();
+});
+$('#list').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-act]'); if(!btn) return;
+  var act0=btn.dataset.act;
+  if(act0==='add'){ openEditor(null); return; }
+  var host=e.target.closest('[data-id]'); if(!host) return;
+  var id=host.dataset.id;
+  var it=state.items.filter(function(x){ return x.id===id; })[0]; if(!it) return;
+  var act=btn.dataset.act, field=btn.dataset.field;
+  if(act==='copy'){ copyText(it[field]); }
+  else if(act==='pwd'){ copyText(it.password); }
+  else if(act==='copy-pwd'){ copyText(it.password); }
+  else if(act==='toggle'){
+    state.revealed[id]=!state.revealed[id];
+    renderList();
+  }
+  else if(act==='fav'){ it.fav=!it.fav; it.updatedAt=Date.now(); persist().then(renderAll); }
+  else if(act==='edit'){ openEditor(id); }
+  else if(act==='del'){
+    if(confirm('确定删除「'+it.title+'」吗？删除后无法恢复。')){
+      state.items=state.items.filter(function(x){ return x.id!==id; });
+      persist().then(function(){ renderAll(); toast('已删除'); });
+    }
+  }
+});
+$('#search').addEventListener('input',function(){ state.search=this.value; renderList(); });
+$('#sortSel').addEventListener('change',function(){ state.settings.sort=this.value; persist(); renderList(); });
+$('#viewSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  setView(b.dataset.view); persist(); renderList();
+});
+$('#addBtn').onclick=function(){ openEditor(null); };
+$('#themeBtn').onclick=function(){
+  state.settings.theme = state.settings.theme==='dark'?'light':'dark';
+  applyTheme(); persist();
+};
+$('#lockBtn2').onclick=lockNow;
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){ closeModal(); return; }
+  var mod=e.ctrlKey||e.metaKey;
+  if(mod && e.key.toLowerCase()==='f'){ e.preventDefault(); $('#search').focus(); $('#search').select(); }
+  else if(mod && e.key.toLowerCase()==='n' && state.unlocked){ e.preventDefault(); openEditor(null); }
+  else if(mod && e.key.toLowerCase()==='l' && state.unlocked){ e.preventDefault(); lockNow(); }
+});
+
+/* ---------- 自动锁定 ---------- */
+var lastAct=Date.now();
+['mousedown','keydown','input','scroll','touchstart'].forEach(function(ev){
+  document.addEventListener(ev,function(){ lastAct=Date.now(); },{passive:true});
+});
+setInterval(function(){
+  if(!state.unlocked) return;
+  var t=state.settings.autoLock||0;
+  if(t>0 && Date.now()-lastAct > t*1000){
+    toast('长时间无操作，已自动锁定'); lockNow();
+  }
+},5000);
+
+/* ---------- 启动 ---------- */
+$('#brandMark').innerHTML=ic('shield',17,2);
+$('#searchIcon').innerHTML=ic('search',16);
+$('#addBtn').innerHTML=ic('plus')+'新增账号';
+$('#lockBtn2').innerHTML=ic('lock');
+$$('#viewSeg button').forEach(function(b){ b.innerHTML=ic(b.dataset.view==='grid'?'grid':'list',15); });
+$('#themeBtn').innerHTML=ic('sun');
+var footIcon={export:'download',settings:'settings',help:'help'};
+$$('.sidebar-foot .nav-item').forEach(function(el){
+  var s=$('.ic',el); if(s) s.outerHTML=ic(footIcon[el.dataset.act]||'settings',16);
+});
+
+if(!hasCrypto()){
+  $('#lockSub').textContent='当前环境不支持 Web Crypto，请改用 Chrome / Edge 打开';
+  $('#pwd1').disabled=true; $('#lockBtn').disabled=true;
+  $('#lockFoot').innerHTML='<div class="lock-tip">浏览器的加密接口不可用。请使用 Chrome、Edge 或 Firefox 打开本文件（不要使用老旧浏览器或某些内置 WebView）。</div>';
+}else{
+  showLock(localStorage.getItem(LS_KEY)?'login':'setup');
+}
+
+/* ---------- PWA：可安装到主屏幕 + 离线缓存 ---------- */
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  window.addEventListener('load',function(){ navigator.serviceWorker.register('./sw.js').catch(function(){}); });
+}
+})();
+</script>
+</body>
+</html>
